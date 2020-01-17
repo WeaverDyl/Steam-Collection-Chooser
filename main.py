@@ -1,8 +1,10 @@
 from pathlib import Path
-import requests, json, vdf
+import requests, json, random, vdf
 from steam import steamid
 
 # TODO: Exception handling
+# TODO: Comment
+# TODO: Cleanup
 
 def get_user_list():
     # Gets a list of users found on the machine
@@ -105,10 +107,24 @@ def ask_user_collection(collections):
 
     return collections[chosen_collection]
 
-def choose_game(collection):
-    # Choose a random AppID and convert it to a readable title
-    # and print it out to the user
-    pass
+def choose_game(collection, tries):
+    # Choose a random game from the collection
+
+    # Sometimes games are removed from Steam, etc... so we can't access the
+    # game's name given it's ID.
+    if tries == 0:
+        print("Multiple failures. Try a different collection, or try again later.")
+        return
+
+    random_gameid = random.choice(collection)
+    url = f'https://store.steampowered.com/api/appdetails/?appids={random_gameid}'
+    res = requests.get(url)
+
+    try:
+        game_name = json.loads(res.text)[f'{random_gameid}']['data']['name']
+        print(f'You should play {game_name}!')
+    except KeyError:
+        choose_game(collection, tries - 1)
 
 
 all_users = get_user_list() # All users
@@ -119,4 +135,7 @@ print() # Leave a space between user and collection text
 
 all_collections = get_collections(sharedconfig) # List of all game collections
 chosen_collection = ask_user_collection(all_collections) # The selected collection
-# choose_game(chosen_collection) # Pick a random game and tell the user what it is
+
+print() # Leave a space between collection and chosen game text
+
+choose_game(chosen_collection, 5) # Pick a random game and tell the user what it is
