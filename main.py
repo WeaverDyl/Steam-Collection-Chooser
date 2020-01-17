@@ -1,5 +1,7 @@
 from pathlib import Path
+import requests, json
 from steamfiles import appinfo
+from steam import steamid
 
 def get_user_list():
     # Gets a list of users found on the machine
@@ -30,17 +32,28 @@ def ask_user_id(users):
     while chosen_user not in list(user_map.values()):
         print("Please choose a user:")
         
-        for user, key_mapping in user_map.items():
-            print(f"{user}. '{key_mapping}'")
+        for option_id, user in user_map.items():
+            steam_id = steamid.make_steam64(user) # Convert SteamID3
+            get_username_from_id(steam_id)
+            steam_username = get_username_from_id(steam_id)
+            print(f"{option_id}. '{steam_username}'")
 
-        chosen_key_mapping = input() # Allow user input
+        chosen_option_id = input() # Allow user input
         
         try:
-            chosen_user = user_map[chosen_key_mapping]
+            chosen_user = user_map[chosen_option_id]
         except KeyError:
             continue
 
     return chosen_user
+
+def get_username_from_id(steam_id):
+    API_KEY = ''
+    url = f'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={API_KEY}&steamids={steam_id}'
+
+    res = requests.get(url)
+    return json.loads(res.text)['response']['players'][0]['personaname']
+
 
 def get_sharedconfig(user_id):
     # Given a user, return the sharedconfig file located at
@@ -66,7 +79,6 @@ def choose_game(collection):
 
 all_users = get_user_list() # All users
 chosen_user = ask_user_id(all_users) # Ask which user to select a game for
-
 # sharedconfig = get_sharedconfig(chosen_user) # Reference to sharedconfig
 
 # all_collections = get_collections(sharedconfig) # List of all game collections
