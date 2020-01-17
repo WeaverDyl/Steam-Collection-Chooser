@@ -79,8 +79,31 @@ def get_collections(sharedconfig):
     return collections
 
 def ask_user_collection(collections):
-    # ask which collection to choose a game from
-    pass
+    # Ask the user which user to select from the get_collections() func
+    chosen_collection = None # Set up
+    collection_map = {} # Stores user_id as value and option_id as key
+    option_id = 1
+
+    # Assign each user a unique option_id
+    for collection in collections.keys():
+        collection_map[str(option_id)] = collection
+        option_id += 1
+    
+    # Ask user for selection, if selection not valid, ask again
+    while chosen_collection not in list(collection_map.values()):
+        print("Please choose a collection:")
+        
+        for option_id, collection in collection_map.items():
+            print(f"{option_id}. '{collection}'")
+
+        chosen_option_id = input() # Allow user input
+        
+        try:
+            chosen_collection = collection_map[chosen_option_id]
+        except KeyError:
+            continue
+
+    return collections[chosen_collection]
 
 def choose_game(collection):
     # Choose a random AppID and convert it to a readable title
@@ -92,12 +115,8 @@ all_users = get_user_list() # All users
 chosen_user = ask_user_id(all_users) # Ask which user to select a game for
 sharedconfig = get_sharedconfig(chosen_user) # Reference to sharedconfig
 
+print() # Leave a space between user and collection text
+
 all_collections = get_collections(sharedconfig) # List of all game collections
 chosen_collection = ask_user_collection(all_collections) # The selected collection
-
 # choose_game(chosen_collection) # Pick a random game and tell the user what it is
-
-# TODO
-# - can easily just make a function to choose from a python list
-#   instead of having multiple functions (ask_user_id, ask_user_collection)
-#   and just print a "choose a user"/"choose a collection" above the call
