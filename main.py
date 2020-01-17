@@ -1,7 +1,8 @@
 from pathlib import Path
-import requests, json
-from steamfiles import appinfo
+import requests, json, vdf
 from steam import steamid
+
+# TODO: Exception handling
 
 def get_user_list():
     # Gets a list of users found on the machine
@@ -54,18 +55,28 @@ def get_username_from_id(steam_id):
     res = requests.get(url)
     return json.loads(res.text)['response']['players'][0]['personaname']
 
-
 def get_sharedconfig(user_id):
-    # Given a user, return the sharedconfig file located at
-    # \user\7\remote\sharedconfig.vdf
-
-    # this means that we'll always have a reference to the file
-    # and don't need to load it multiple times
-    pass
+    # Return a reference to the selected user's sharedconfig file
+    path = Path(f'C:\\Program Files (x86)\\Steam\\userdata\\{user_id}\\7\\remote')
+    f = vdf.load(open(f'{path}\\sharedconfig.vdf'))
+    return f
 
 def get_collections(sharedconfig):
-    # Get a list of all of the collections in the sharedconfig file
-    pass
+    base = sharedconfig['UserLocalConfigStore']['Software']['Valve']['Steam']['Apps']
+    collections = {}
+
+    for game_id, game_info in base.items():
+        try:
+            for collection in game_info['tags'].values():
+                if collection in collections.keys():
+                    collections[collection].append(game_id)
+                else:
+                    collections[collection] = [game_id]
+        except KeyError:
+            # Game isn't in any collections
+            continue
+
+    return collections
 
 def ask_user_collection(collections):
     # ask which collection to choose a game from
@@ -79,10 +90,10 @@ def choose_game(collection):
 
 all_users = get_user_list() # All users
 chosen_user = ask_user_id(all_users) # Ask which user to select a game for
-# sharedconfig = get_sharedconfig(chosen_user) # Reference to sharedconfig
+sharedconfig = get_sharedconfig(chosen_user) # Reference to sharedconfig
 
-# all_collections = get_collections(sharedconfig) # List of all game collections
-# chosen_collection = ask_user_collection(all_collections) # The selected collection
+all_collections = get_collections(sharedconfig) # List of all game collections
+chosen_collection = ask_user_collection(all_collections) # The selected collection
 
 # choose_game(chosen_collection) # Pick a random game and tell the user what it is
 
