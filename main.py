@@ -2,6 +2,8 @@ import requests, json, vdf, random, sys
 from pathlib import Path
 from steam import steamid
 
+API_KEY = ''
+
 def get_user_list():
     # Gets a list of users found on the machine
     users = []
@@ -56,7 +58,6 @@ def ask_user_id(users):
 
 def get_username_from_id(steam_id):
     # Converts the SteamID 64 to user's real username to make it more readable
-    API_KEY = ''
     url = f'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={API_KEY}&steamids={steam_id}'
 
     try:
